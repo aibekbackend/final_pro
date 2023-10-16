@@ -74,11 +74,11 @@ class PizzaViewSet(mixins.ListModelMixin,
         return response.Response({'avg_rating': avg_rating})
 
 
-class OrderListCreateAPIView(generics.ListCreateAPIView):
+class OrderListCreateAPIView(mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializers
     permission_classes = [AllowAny]
-
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
@@ -91,6 +91,8 @@ class OrderListCreateAPIView(generics.ListCreateAPIView):
             }
         )
         serializer.is_valid(raise_exception=True)
+        pizza_id_list = [item['pizza_id'] for item in request.data]
+        pizzas = Pizza.objects.filter(id__in=pizza_id_list)
         order_pizza_list = []
         total_cost = 0
         for order_pizza_data in request.data:
@@ -99,7 +101,12 @@ class OrderListCreateAPIView(generics.ListCreateAPIView):
             pizza_size_id = order_pizza_data.get('pizza_size', None)
             pizza = Pizza.objects.get(id=pizza_id)
             pizza_size = PizzaSize.objects.get(id=pizza_size_id) if pizza_size_id else None
-            price = pizza_size.price if pizza_size else pizza.price
+
+            if pizza_size:
+                price = pizza_size.price_for_size()
+            else:
+                price = pizza.price
+
             obj = OrderPizza(pizza_id_id=pizza.id, order_id_id=order.id, amount=amount, pizza_size=pizza_size)
             order_pizza_list.append(obj)
             total_cost += price * amount
@@ -112,3 +119,36 @@ class OrderListCreateAPIView(generics.ListCreateAPIView):
 
 
 
+
+
+
+
+
+
+
+        # order = Order.objects.create(customer=request.user, total_cost=0)
+        # serializer = OrderPizzaSerializers(
+        #     data=request.data,
+        #     many=True,
+        #     context={
+        #         'order_id': order.id,
+        #     }
+        # )
+        # serializer.is_valid(raise_exception=True)
+        # order_pizza_list = []
+        # total_cost = 0
+        # for order_pizza_data in request.data:
+        #     pizza_id = order_pizza_data['pizza_id']
+        #     amount = order_pizza_data['amount']
+        #     pizza_size_id = order_pizza_data.get('pizza_size', None)
+        #     pizza = Pizza.objects.get(id=pizza_id)
+        #     pizza_size = PizzaSize.objects.get(id=pizza_size_id) if pizza_size_id else None
+        #     price = pizza_size.price if pizza_size else pizza.price
+        #     obj = OrderPizza(pizza_id_id=pizza.id, order_id_id=order.id, amount=amount, pizza_size=pizza_size)
+        #     order_pizza_list.append(obj)
+        #     total_cost += price * amount
+        #
+        # OrderPizza.objects.bulk_create(objs=order_pizza_list)
+        # order.total_cost = total_cost
+        # order.save(update_fields=['total_cost'])
+        # return response.Response(serializer.data, 201)

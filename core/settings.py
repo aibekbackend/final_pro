@@ -29,8 +29,8 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,12 +42,13 @@ INSTALLED_APPS = [
 
     #custom
     'pizzas_app',
-    'rest_framework',
+    'user_auth',
     'rest_framework.authtoken',
     'drf_spectacular',
     'drf_spectacular_sidecar',
-    'corsheaders'
+    'corsheaders',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -161,6 +162,13 @@ SPECTACULAR_SETTINGS = {
     'REDOC_DIST': 'SIDECAR',
 
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mailgun.org'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'postmaster@sandbox250b6ab4f71140fe9f253a06288cb22e.mailgun.org'
+EMAIL_HOST_PASSWORD = 'b942003336a436717f6127acaa6975c8-413e373c-bf783389'
 
 
 CORS_ALLOWED_ORIGINS = [

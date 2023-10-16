@@ -1,17 +1,27 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Pizza, Ingredient, Order, Review, OrderPizza, PizzaSize
+from .models import Pizza, Ingredient, Order, Review, OrderPizza, PizzaSize, Size
 from django.db import transaction
+
+class SizeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Size
+        fields = ['title']
 
 
 class PizzaSizeSerializer(serializers.ModelSerializer):
     size = serializers.StringRelatedField()
     price = serializers.DecimalField(max_digits=6, decimal_places=2)
-    percent_increase = serializers.DecimalField(max_digits=5, decimal_places=2)
+
+    def __init__(self, *args, **kwargs):
+        self.pizza = kwargs.pop('pizza', None)
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = PizzaSize
-        fields = ['size', 'price', 'percent_increase']
+        fields = ['size', 'price']
+
+
 
 class PizzaSerializers(serializers.ModelSerializer):
     image = serializers.ImageField(read_only=True)

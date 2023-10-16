@@ -4,13 +4,13 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Size(models.Model):
-    size_small = 25
-    size_average = 35
-    size_large = 45
+    size_small = "25"
+    size_average = "35"
+    size_large = "45"
     size_list = (
-        (size_small, "Small (25cm)"),
-        (size_average, "Average (35cm)"),
-        (size_large, "Large (45cm)"),
+        (size_small, "25"),
+        (size_average, "35cm"),
+        (size_large, "45cm"),
     )
     title = models.TextField(choices=size_list, default=size_small)
 
@@ -62,8 +62,16 @@ class PizzaSize(models.Model):
     pizza = models.ForeignKey(Pizza, on_delete=models.CASCADE, related_name='pizza_sizes')
     size = models.ForeignKey(Size, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
-    percent_increase = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
 
+    def price_for_size(self):
+        if self.size:
+            if self.size.title == "25":
+                return self.price
+            elif self.size.title == "35cm":
+                return self.price * 1.4  # Увеличиваем цену на 40%
+            elif self.size.title == "45cm":
+                return self.price * 1.6  # Увеличиваем цену на 60%
+        return self.price
 
 class OrderPizza(models.Model):
     pizza_id = models.ForeignKey(Pizza, on_delete=models.SET_NULL, null=True)

@@ -1,15 +1,19 @@
 from django.urls import path, include
 from rest_framework_nested import routers
 from .views import PizzaViewSet, OrderListCreateAPIView
-from django.conf import settings
-from django.conf.urls.static import static
 
-
+# Создайте экземпляр DefaultRouter
 router = routers.DefaultRouter()
-router.register('pizza', PizzaViewSet, basename='pizza')
+# Зарегистрируйте ваше представление PizzaViewSet
+router.register(r'pizzas', PizzaViewSet)
 
+# Определите вложенные маршруты для OrderListCreateAPIView
+order_router = routers.NestedDefaultRouter(router, r'pizzas', lookup='pizza')
+order_router.register(r'orders', OrderListCreateAPIView, basename='order')
 
+# Теперь добавьте маршруты из router и order_router к вашим общим маршрутам
 urlpatterns = [
-    path('order/create', OrderListCreateAPIView.as_view(), name='order-create'),
-    path('', include(router.urls)),
+    # ... другие маршруты ...
+    path('api/', include(router.urls)),
+    path('api/', include(order_router.urls)),
 ]
