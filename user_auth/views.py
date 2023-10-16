@@ -10,6 +10,7 @@ from rest_framework.authtoken.models import Token
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import check_password
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth.hashers import make_password
 from rest_framework.parsers import MultiPartParser
@@ -17,7 +18,13 @@ from .serializers import (RegisterSerializer, LoginSerializer, RecoverPasswordSe
                           UsersProfileSerializer, UpdatePasswordSerializer, PhotoChangeSerializer, SendCodeSerializer)
 from .models import Register
 
-
+def authenticate_user(username, password):
+    try:
+        my_user = Register.objects.get(username=username)
+        if check_password(password, my_user.password):
+            return my_user
+    except Register.DoesNotExist:
+        return None
 
 class СlientSignupViewSet(generics.CreateAPIView):
     queryset = Register.objects.all()
@@ -30,27 +37,17 @@ class ClientLoginviewSet(generics.GenericAPIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data,
-                                         context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = authenticate(username=serializer.validated_data['username'],
-                            password=serializer.validated_data['password'])
-
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate_user(username=username, password=password)
         if not user:
             raise exceptions.AuthenticationFailed()
-        user.last_login = timezone.now()
         user.save()
 
-        token, created = Token.objects.get_or_create(user=user)
-
-        # if created:
-        #     token_key = token.key
-        # else:
-        #     token_key = token.key
+        token, _ = Token.objects.get_or_create(user=user)
 
         return response.Response(data={"token": token.key},
                                  status=status.HTTP_200_OK)
-
 
 class VerificationCodeAPIView(APIView):
     @extend_schema(
