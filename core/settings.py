@@ -189,3 +189,6 @@ CORS_ALLOW_HEADERS = [
     'Content-Type',
     'Authorization'
 ]
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
